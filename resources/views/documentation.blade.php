@@ -14,7 +14,7 @@
       }
 
       #redoc_container .menu-content img {
-        padding: 0px 0px 30px 0px;
+          padding: 30px 0px 30px 0px;
       }
     </style>
     <link rel="icon" type="image/png" href="/favicon.ico">
@@ -22,13 +22,14 @@
   </head>
   <body>
     <div id="redoc_container"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@redoc/redoc-pro@1.0.0-beta.38/dist/redocpro-standalone.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/redoc@2.0.0-rc.50/bundles/redoc.standalone.min.js"></script>
+
     <script>
-      RedocPro.init(
+      Redoc.init(
         "{{config('idoc.output') . "/openapi.json"}}", {
           "showConsole": true,
           "pathInMiddlePanel": true,
-          "redocExport": "RedocPro",
+          "redocExport": "Redoc",
           "layout": { "scope": "section" },
           "unstable_externalDescription": '{{route('idoc.info')}}',
           "hideDownloadButton" : {{config('idoc.hide_download_button') ?: 0}}
