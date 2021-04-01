@@ -278,7 +278,7 @@ class IDocGeneratorCommand extends Command
                     $responseParameters = collect($route['response'])->mapWithKeys(function ($schema, $name) use ($route) {
                         return [
                             $schema['status'] => [
-                                'description' => 'success',
+                                'description' => trans('errors.'.$schema['status']),
                                 'content' => [
                                     'application/json' => [
                                         'schema' => [
