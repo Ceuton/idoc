@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Mpociot\Reflection\DocBlock;
 use OVAC\IDoc\Tools\RouteMatcher;
 use ReflectionClass;
@@ -160,29 +161,7 @@ class IDocGeneratorCommand extends Command
 
                 $methodGroup = $routeGroup->where('uri', $route['uri'])->mapWithKeys(function ($route) use ($groupName, $routes) {
 
-                    $bodyParameters = collect($route['bodyParameters'])->map(function ($schema, $name) use ($routes) {
-
-                        $type = $schema['type'];
-                        $default = $schema['value'];
-
-                        if ($type === 'float') {
-                            $type = 'number';
-                        }
-
-                        if ($type === 'json' && $default) {
-                            $type = 'object';
-                            $default = json_decode($default);
-                        }
-
-                        return [
-                            'in' => 'formData',
-                            'name' => $name,
-                            'description' => $schema['description'],
-                            'required' => $schema['required'],
-                            'type' => $type,
-                            'default' => $default,
-                        ];
-                    });
+                    $bodyParameters = $this->mapBodyParameters($routes, $route['bodyParameters']);
 
                     $jsonParameters = [
                         'application/json' => [
@@ -275,7 +254,22 @@ class IDocGeneratorCommand extends Command
                         ];
                     });
 
-                    $responseParameters = collect($route['response'])->mapWithKeys(function ($schema, $name) use ($route) {
+                    $responseParameters = collect($route['response'])->mapWithKeys(function ($schema, $name) use ($route, $bodyParameters) {
+                        $content = collect(json_decode($schema['content'], true));
+
+                        $required = [];
+
+                        $properties = $content->get('properties') ? $content->get('properties') : [];
+
+                        foreach ($properties as $key => $property) {
+                            if(isset($property['required'])) {
+                                $required[] = $key;
+                                unset($properties[$key]['required']);
+                            }
+                        }
+
+                        $example = $content->except(['properties', 'required']) ? $content->except(['properties', 'required']) : [];
+
                         return [
                             $schema['status'] => [
                                 'description' => trans('errors.'.$schema['status']),
@@ -283,7 +277,9 @@ class IDocGeneratorCommand extends Command
                                     'application/json' => [
                                         'schema' => [
                                             'type' => 'object',
-                                            'example' => json_decode($schema['content'], true),
+                                            'required' => $required,
+                                            'properties' => $properties,
+                                            'example' => $example,
                                         ],
                                     ],
                                 ],
@@ -469,5 +465,32 @@ class IDocGeneratorCommand extends Command
         ];
 
         return json_encode($collection);
+    }
+
+    public function mapBodyParameters($routes, $parameters)
+    {
+        return collect($parameters)->map(function ($schema, $name) use ($routes) {
+
+            $type = $schema['type'];
+            $default = $schema['value'];
+
+            if ($type === 'float') {
+                $type = 'number';
+            }
+
+            if ($type === 'json' && $default) {
+                $type = 'object';
+                $default = json_decode($default);
+            }
+
+            return [
+                'in' => 'formData',
+                'name' => $name,
+                'description' => $schema['description'],
+                'required' => $schema['required'],
+                'type' => $type,
+                'default' => $default,
+            ];
+        });
     }
 }
