@@ -3,6 +3,7 @@
 namespace OVAC\IDoc\Tools;
 
 use Dingo\Api\Routing\RouteCollection;
+use Dingo\Api\Routing\Router;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\Str;
@@ -55,7 +56,7 @@ class RouteMatcher
             return RouteFacade::getRoutes();
         }
 
-        $allRouteCollections = app(\Dingo\Api\Routing\Router::class)->getRoutes();
+        $allRouteCollections = app(Router::class)->getRoutes();
 
         return collect($allRouteCollections)
             ->flatMap(function (RouteCollection $collection) {

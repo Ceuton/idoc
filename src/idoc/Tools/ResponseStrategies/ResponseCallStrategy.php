@@ -3,6 +3,9 @@
 namespace OVAC\IDoc\Tools\ResponseStrategies;
 
 use Dingo\Api\Dispatcher;
+use Exception;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Route;
@@ -35,7 +38,7 @@ class ResponseCallStrategy
 
         try {
             $response = [$this->makeApiCall($request)];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response = null;
         } finally {
             $this->finish();
@@ -73,7 +76,7 @@ class ResponseCallStrategy
         // Mix in parsed parameters with manually specified parameters.
         $queryParams = collect($this->cleanParams($queryParams))->merge($rulesToApply['query'] ?? [])->toArray();
         $bodyParams = collect($this->cleanParams($bodyParams))->merge($rulesToApply['body'] ?? [])->toArray();
-        
+
         $request = Request::create($uri, $method, [], $cookies, [], $this->transformHeadersToServerVars($rulesToApply['headers'] ?? []), json_encode($bodyParams));
         $request = $this->addHeaders($request, $route, $rulesToApply['headers'] ?? []);
         $request = $this->addQueryParameters($request, $queryParams);
@@ -126,7 +129,7 @@ class ResponseCallStrategy
     {
         try {
             app('db')->beginTransaction();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -137,7 +140,7 @@ class ResponseCallStrategy
     {
         try {
             app('db')->rollBack();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -152,12 +155,12 @@ class ResponseCallStrategy
     /**
      * @param Request $request
      *
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return JsonResponse|mixed
      */
     public function callDingoRoute(Request $request)
     {
         /** @var Dispatcher $dispatcher */
-        $dispatcher = app(\Dingo\Api\Dispatcher::class);
+        $dispatcher = app(Dispatcher::class);
 
         foreach ($request->headers as $header => $value) {
             $dispatcher->header($header, $value);
@@ -250,9 +253,9 @@ class ResponseCallStrategy
     /**
      * @param Request $request
      *
-     * @throws \Exception
+     * @return JsonResponse|mixed|\Symfony\Component\HttpFoundation\Response
+     * @throws Exception
      *
-     * @return \Illuminate\Http\JsonResponse|mixed|\Symfony\Component\HttpFoundation\Response
      */
     private function makeApiCall(Request $request)
     {
@@ -268,13 +271,13 @@ class ResponseCallStrategy
     /**
      * @param Request $request
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
     private function callLaravelRoute(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        $kernel = app(\Illuminate\Contracts\Http\Kernel::class);
+        $kernel = app(Kernel::class);
         $response = $kernel->handle($request);
         $kernel->terminate($request, $response);
 

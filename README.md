@@ -75,8 +75,9 @@ This will create an `idoc.php` file in your `config` folder.
 
 ### Lumen
 - Register the service provider in your `bootstrap/app.php`:
+
 ```php
-$app->register(\OVAC\IDoc\IDocServiceProvider::class);
+use OVAC\IDoc\IDocServiceProvider;$app->register(IDocServiceProvider::class);
 ```
 - Copy the config file from `vendor/ovac/idoc/config/idoc.php` to your project as `config/idoc.php`. Then add to your `bootstrap/app.php`:
 ```php
@@ -346,13 +347,12 @@ To specify a list of valid parameters your API route accepts, use the `@bodyPara
 - The `@queryParam` annotation takes the name of the parameter, an optional "required" label, and then its description
 - The `@pathParam` annotation takes the name of the parameter, an optional "required" label, and then its description
 
-
 ```php
 
 /**
  * @group Items
  */
-class ItemController extends Controller
+use App\Item;class ItemController extends Controller
 {
 
     /**
@@ -420,7 +420,7 @@ class ItemController extends Controller
      * }
      * @authenticated
      *
-     * @param  \App\Item  $item
+     * @param  Item  $item
      * @return \Illuminate\Http\Response
      */
     public function show(Item $item)
@@ -457,7 +457,7 @@ Note: You can also add the `@bodyParam` annotations to a `\Illuminate\Foundation
  * @bodyParam author_id int the ID of the author
  * @bodyParam thumbnail image This is required if the post type is 'imagelicious'.
  */
-class MyRequest extends \Illuminate\Foundation\Http\FormRequest
+use Illuminate\Foundation\Http\FormRequest;class MyRequest extends FormRequest
 {
 
 }
